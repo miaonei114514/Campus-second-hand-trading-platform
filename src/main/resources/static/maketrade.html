@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <title>创建订单</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+
+<!--script make--><div id="topBar"></div>
+<div class="container-slim padding-box">
+    <!--script make--><div id="goods-meta" class="margin-box back bar"></div>
+
+    <div class="margin-box back bar">
+        <h5>填写收货人信息</h5>
+        <label for="receiver" class="lab">收货人</label><input id="receiver" type="text" class="def-input" placeholder="收货人姓名">
+        <label for="phone" class="lab">电话</label><input id="phone" type="tel" class="def-input" placeholder="收货人电话">
+        <label for="address" class="lab">收货地点</label><div class="margin-hor padding-box write-back">
+            <textarea id="address" class="editor"></textarea>
+        </div>
+    </div>
+
+    <div id="bottom" class="margin-box back bar">
+        <fieldset>
+            <legend><h5 class="lab">选择支付方式：</h5></legend>
+
+            <div class="flex">
+                <input type="radio" id="offline" class="pay-check" name="method">
+
+                <label for="offline" class="lab padding-box" style="width: 30%"><img src="/assets/img/offline.png" alt="..." class="icon-big margin-hor">线下交易</label>
+            </div>
+            <div class="flex">
+                <input type="radio" id="weichat" class="pay-check" name="method">
+                <label for="weichat" class="lab padding-box" style="width: 30%"><img src="/assets/img/weichat.png" alt="..." class="icon-big margin-hor">微信支付</label>
+            </div>
+            <div class="flex">
+                <input type="radio" id="paybao" class="pay-check" name="method">
+                <label for="paybao" class="lab padding-box" style="width: 30%"><img src="/assets/img/paybao.png" alt="..." class="icon-big margin-hor">支付宝</label>
+            </div>
+        </fieldset>
+        <div class="pos-relative" style="height: 34px"><button id="pay" class="btn pos-absolute right">购买</button></div>
+    </div>
+</div>
+
+<script src="/pagescripts/maketrade-page.js" defer></script>
+<script>initTrades(${goods})</script>
+
+</body>
+</html>

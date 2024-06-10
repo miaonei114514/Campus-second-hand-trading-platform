@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+<div class="login-cont">
+    <h2>注册</h2>
+    <form class="login" id="signup-form">
+        <label for="name">用户名：</label>
+        <input type="text" id="name" name="name" required placeholder="长度6-18之间，允许使用数字与英文字母以及下划线">
+        <br>
+        <label for="email">邮箱：</label>
+        <input type="text" id="email" name="email" required placeholder="建议使用校园邮箱">
+        <br>
+        <label for="password">密码：</label>
+        <input type="password" id="password" name="password" required placeholder="长度8-24，允许使用英文字符，特殊符号和数字">
+        <br>
+        <label for="confirm-password">确认密码：</label>
+        <input type="password" id="confirm-password" name="confirm-password" required placeholder="再次输入密码">
+        <br>
+    </form>
+
+    <div id="error" class="error-tip"></div>
+    <button id="signup-action" class="button-1">注册</button>
+    <p>已有账户？<a href="/login">立即登录</a></p>
+</div>
+
+<script src="/lib/jquery/dist/jquery.min.js"></script>
+<script src="/lib/jsencrypt/bin/jsencrypt.min.js"></script>
+<script src="/scripts/types.js"></script>
+<script src="/scripts/components.js"></script>
+<script src="/scripts/main.js"></script>
+
+<script src="/signup.js"></script>
+
+</body>
+</html>

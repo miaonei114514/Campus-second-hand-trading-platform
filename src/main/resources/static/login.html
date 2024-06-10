@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <title>登录</title>
+</head>
+<body>
+
+<div class="login-cont">
+    <h2>登录</h2>
+    <form class="login" action="/login" method="post">
+        <label for="name">用户名：</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="password">密码：</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+    </form>
+
+    <div id="error" class="error-tip"></div>
+    <button id="login-active" class="button-1">登录</button>
+    <p>还没有账户？<a href="/signup">立即注册</a></p>
+    <a href="/reset_password">找回账户</a>
+</div>
+
+<script src="/lib/jquery/dist/jquery.min.js"></script>
+<script src="/lib/jsencrypt/bin/jsencrypt.min.js"></script>
+<script src="/scripts/types.js"></script>
+<script src="/scripts/security.js"></script>
+<script src="/scripts/components.js"></script>
+<script src="/scripts/main.js"></script>
+
+<script src="/login.js"></script>
+
+</body>
+</html>
