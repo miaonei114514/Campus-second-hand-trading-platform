@@ -1,10 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh_CN">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>购物车</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style.css">
 </head>
 <body>
-$END$
+
+<!--script make--><div id="topBar"></div>
+<div class="container-slim padding-box">
+    <div class="margin-box back bar" style="min-height: 60vh">
+      <div class="write-back padding-box"><label for="all-select" class="lab flex"><input type="checkbox" id="all-select">选择全部</label></div>
+      <!--script make--><div id="goods-list"></div>
+    </div>
+    <div class="margin-box back bar pos-relative">
+        <h5 id="total">已选 0 件商品</h5>
+        <h5>总价：</h5>
+        <h3 id="total-price" class="price">0￥</h3>
+        <div class="pos-absolute bottom right padding-box">
+            <button id="maketrade" class="btn btn-primary">生成订单</button>
+        </div>
+    </div>
+</div>
+
+<script src="/pagescripts/cart-page.js" defer></script>
+
 </body>
 </html>

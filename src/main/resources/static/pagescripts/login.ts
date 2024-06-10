@@ -1,3 +1,6 @@
+import {Result} from "../scripts/types";
+import $ from "jquery"
+
 $("#login-active").on("click", () => {
   let form = {
     name: $("#name").val(),

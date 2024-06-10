@@ -1,4 +1,12 @@
 package com.schoolshop.utils
 
-class SuccessRes {
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SuccessRes<T>(
+  val code: Int,
+  val obj: T?,
+  val message: String? = null,
+){
+  val status = "success"
 }

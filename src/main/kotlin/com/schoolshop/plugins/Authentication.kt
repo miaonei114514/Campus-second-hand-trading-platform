@@ -1,6 +1,7 @@
 package com.schoolshop.plugins
 
 import com.schoolshop.dbservice.Permission
+import com.schoolshop.dbservice.UserService
 import com.schoolshop.dbservice.Users
 import com.schoolshop.dbservice.Users.assignTime
 import com.schoolshop.dbservice.Users.description
@@ -9,8 +10,6 @@ import com.schoolshop.dbservice.Users.email
 import com.schoolshop.dbservice.Users.name
 import com.schoolshop.dbservice.Users.passwordHash
 import com.schoolshop.dbservice.Users.permission
-import com.schoolshop.dbservice.Users.uid
-import com.schoolshop.dbservice.userService
 import com.schoolshop.utils.ErrorRes
 import com.schoolshop.utils.SuccessRes
 import io.ktor.server.application.*
@@ -26,12 +25,12 @@ val nameRegex = Regex("^([a-zA-Z0-9_])+$")
 val emailRegex = Regex("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")
 val passwordRegex = Regex("^([a-zA-Z0-9+_\\-$@&*%!?])+$")
 
-var string: String = "";
-var string1: String? = null;
+const val PUBLIC_KEY = ""
+const val PRIVATE_KEY = ""
 
+/**已登录用户的Cookie映射会话对象*/
 data class UserContext(
   val id: Int,
-  val uid: String,
   val name: String,
   val permission: Int,
 
@@ -43,7 +42,7 @@ data class UserContext(
 
 val varList = listOf("displayName", "description")
 
-fun Application.configureSecurity() {
+fun Application.configureAuthentication() {
   install(Sessions) {
     cookie<UserContext>("USER_CONTEXT") {
       cookie.path = "/"
@@ -52,6 +51,9 @@ fun Application.configureSecurity() {
   }
 
   routing {
+    get("/security/get-pub-key") {
+      call.respond(SuccessRes(0, null, message = PUBLIC_KEY))
+    }
 
     post("/register") {
       val parameters = call.receiveParameters()
@@ -60,10 +62,10 @@ fun Application.configureSecurity() {
         (parameters["name"] as String).let { it.length < 6 || it.length > 18 || !nameRegex.matches(it) } -> call.respond(ErrorRes(0, "name format is invalid"))
         (parameters["email"] as String).let { !emailRegex.matches(it) } -> call.respond(ErrorRes(1, "email format is invalid"))
         (parameters["password"] as String).let { it.length < 8 || it.length > 24 || !passwordRegex.matches(it) } -> call.respond(ErrorRes(2, "password format is invalid"))
-        userService.any{ name eq parameters["name"] as String } -> call.respond(ErrorRes(3, "name has been registed"))
-        userService.any { email eq parameters["email"] as String } -> call.respond(ErrorRes(4, "this email has been registed"))
+        UserService.any{ name eq parameters["name"] as String } -> call.respond(ErrorRes(3, "name has been registed"))
+        UserService.any { email eq parameters["email"] as String } -> call.respond(ErrorRes(4, "this email has been registed"))
         else -> {
-          val newUser = userService.create(
+          val newUser = UserService.create(
             name to parameters["name"]!!,
             email to parameters["email"]!!,
             permission to Permission.NORMAL,
@@ -72,7 +74,6 @@ fun Application.configureSecurity() {
 
           call.sessions.set("USER_CONTEXT", UserContext(
             newUser.id,
-            newUser[uid]!!,
             newUser[name]!!,
             newUser[permission]!!,
             newUser[email]!!,
@@ -80,7 +81,7 @@ fun Application.configureSecurity() {
             newUser[description]
           ))
 
-          File(userContext, "/${newUser[uid]!!}").mkdirs()
+          File(userContext, "/${newUser.id}").mkdirs()
 
           call.respond(SuccessRes(0, null))
         }
@@ -90,14 +91,13 @@ fun Application.configureSecurity() {
     post("/login") {
       val parameters = call.receiveParameters()
 
-      val user = userService.find { name eq parameters["name"] as String }
+      val user = UserService.find { name eq parameters["name"] as String }
       if (user == null) call.respond(ErrorRes(0, "no such user"))
       else if ((user[name] as String).let { it.length < 6 || it.length > 18 || !nameRegex.matches(it) }) call.respond(ErrorRes(1, "name format is invalid"))
       else if (user[passwordHash] != parameters["password"] as String) call.respond(ErrorRes(2, "Password incorrect"))
       else {
         val usr = UserContext(
           user.id,
-          user[uid]!!,
           user[name]!!,
           user[permission]!!,
           user[email]!!,
@@ -128,7 +128,7 @@ fun Application.configureSecurity() {
       }
 
       val targetName = call.parameters["name"]!!
-      val target = userService.find { name eq targetName }
+      val target = UserService.find { name eq targetName }
       if (target == null) {
         call.respond(ErrorRes(0, "No such user"))
         return@post
@@ -139,11 +139,10 @@ fun Application.configureSecurity() {
         return@map Users.columns.find { e -> e.name == it.key } as Expression<*> to it.value.firstOrNull()
       }.toTypedArray()
 
-      userService.update(target.id, *pairs)
-      val user = userService.read(target.id)!!
+      UserService.update(target.id, *pairs)
+      val user = UserService.read(target.id)!!
       call.respond(SuccessRes(0, obj = mapOf(
         "id" to user.id,
-        "uid" to user[uid],
         "name" to user[name]!!,
         "email" to user[email]!!,
         "displayName" to user[displayName],
@@ -171,12 +170,11 @@ fun Application.configureSecurity() {
         return@map Users.columns.find { e -> e.name == it.key } as Expression<*> to it.value.firstOrNull()
       }.toTypedArray()
 
-      userService.update(user.id, *pairs)
-      val res = userService.read(user.id)!!
+      UserService.update(user.id, *pairs)
+      val res = UserService.read(user.id)!!
 
       user = UserContext(
         res.id,
-        res[uid]!!,
         res[name]!!,
         res[permission]!!,
         res[email]!!,
@@ -195,13 +193,13 @@ fun Application.configureSecurity() {
         call.respond(SuccessRes(0, ses))
       }
       else {
-        call.respond(ErrorRes(0))
+        call.respond(ErrorRes(0, "No user logged in"))
       }
     }
 
-    get ("/usercontext/{uid}") {
-      val uid = call.parameters["uid"]
-      val user = userService.find { Users.uid eq uid }
+    get ("/usercontext/{id}") {
+      val id = call.parameters["id"]?.toIntOrNull()
+      val user = id?.let { UserService.read(it) }
       val ses = call.sessions.get("USER_CONTEXT") as? UserContext
 
       if (user != null && user.id == ses?.id) {
@@ -210,9 +208,9 @@ fun Application.configureSecurity() {
       else if (user != null) {
         call.respond(SuccessRes(1, mapOf(
           "id" to user.id,
-          "uid" to uid,
           "name" to user[name]!!,
           "displayName" to user[displayName],
+          "description" to user[description],
           "permission" to user[permission]!!
         )))
       }

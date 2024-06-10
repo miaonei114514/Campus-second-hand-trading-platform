@@ -14000,17 +14000,167 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const components_1 = require("../scripts/components");
 const jquery_1 = __importDefault(require("jquery"));
-(0, components_1.buildTopBar)("cart");
+(0, jquery_1.default)("#topBar").wrapInner((0, components_1.buildTopBar)("cart"));
 let loginUsr;
+let elems;
 jquery_1.default.get("usercontext", (res) => {
     if (res.status == "error")
         window.location.href = "/login";
     else {
         loginUsr = res.obj;
-        jquery_1.default.get(`/grt-cart/${loginUsr.uid}`, (res) => {
+        jquery_1.default.get(`/get-cart/${loginUsr.id}`, (res) => {
+            let str = "";
+            for (let cartInfo of res.obj) {
+                str += `
+          <label for="goods-${cartInfo.id}" id="goods-block-${cartInfo.id}">
+            <div class="write-back padding-box margin-hor flex pos-relative">
+              <input type="checkbox" class="goods-selector" id="goods-${cartInfo.id}" content="${cartInfo.id}">
+              <img id="img-${cartInfo.id}" src="" alt="loading..." class="small-preview fit-contain">
+              <div class="margin-side pos-relative">
+                <h4 id="title-${cartInfo.id}">...</h4>
+                <div class="flex">
+                  <h5>数量：</h5>
+                  <div class="amount-input" content="small">
+                    <button id="left-${cartInfo.id}" disabled="disabled">-</button>
+                    <input id="amount-${cartInfo.id}" type="number" value="1" min="1" max="1">
+                    <button id="right-${cartInfo.id}" disabled="disabled">+</button>
+                  </div>
+                  <h5 id="rem-${cartInfo.id}">（库存 0 件）</h5>
+                </div>
+                <h3 class="price bottom left pos-absolute" id="price-${cartInfo.id}">...￥</h3>
+              </div>
+              
+              <div class="top right pos-absolute padding-box">
+                <button id="delete-${cartInfo.id}" class="btn" content="small"><img src="/assets/img/trash.png" class="icon" alt="删除"></button>
+              </div>
+            </div>
+          </label>
+        `;
+                jquery_1.default.get(`/goods-info/${cartInfo.goods}`, (res) => {
+                    if (res.status == "error") {
+                        window.alert(res.message);
+                        return;
+                    }
+                    let amount = (0, jquery_1.default)(`#amount-${cartInfo.id}`);
+                    let n = Math.min(res.obj.reminded, cartInfo.amount);
+                    amount.val(n);
+                    amount.attr("max", res.obj.reminded);
+                    if (n > 1)
+                        (0, jquery_1.default)(`#left-${cartInfo.id}`).removeAttr("disabled");
+                    if (n < res.obj.reminded)
+                        (0, jquery_1.default)(`#right-${cartInfo.id}`).removeAttr("disabled");
+                    (0, jquery_1.default)(`#goods-${cartInfo.id}`).attr("content", `{"id":${cartInfo.id}, "goods": ${cartInfo.goods},"amount":${res.obj.reminded},"price":${res.obj.price}}`);
+                    (0, jquery_1.default)(`#img-${cartInfo.id}`).attr("src", `/goods-res/${cartInfo.goods}/preview.png`);
+                    (0, jquery_1.default)(`#title-${cartInfo.id}`).text(res.obj.title);
+                    (0, jquery_1.default)(`#rem-${cartInfo.id}`).text(`（库存 ${res.obj.reminded} 件）`);
+                    (0, jquery_1.default)(`#price-${cartInfo.id}`).text(res.obj.price / 100 + "￥");
+                });
+            }
+            (0, jquery_1.default)("#goods-list").wrapInner(str);
+            elems = (0, jquery_1.default)(".goods-selector");
+            for (let elem of elems) {
+                let info = Number.parseInt(elem.getAttribute("content"));
+                let amount = (0, jquery_1.default)(`#amount-${info}`);
+                let left = (0, jquery_1.default)(`#left-${info}`);
+                let right = (0, jquery_1.default)(`#right-${info}`);
+                let del = (0, jquery_1.default)(`#delete-${info}`);
+                amount.on("input", () => inputted(amount, left, right));
+                left.on("click", () => delta(amount, left, right, false));
+                right.on("click", () => delta(amount, left, right, true));
+                del.on("click", () => (0, components_1.showConfirm)("要把这件商品从购物车中移除吗？", true, () => {
+                    jquery_1.default.post("/remove-cart", { id: info }, (res) => {
+                        if (res.status == "error")
+                            (0, components_1.showConfirm)(res.message);
+                        else
+                            (0, jquery_1.default)(`#goods-block-${info}`).remove();
+                    });
+                }));
+            }
+            elems.on("change", e => changed());
         });
     }
 });
+let allSelect = (0, jquery_1.default)("#all-select");
+allSelect.on("change", e => {
+    if (allSelect.prop("checked")) {
+        for (let e of elems) {
+            let info = JSON.parse(e.getAttribute("content"));
+            (0, jquery_1.default)(`#goods-${info.id}`).prop("checked", true);
+        }
+    }
+    else {
+        for (let e of elems) {
+            let info = JSON.parse(e.getAttribute("content"));
+            (0, jquery_1.default)(`#goods-${info.id}`).prop("checked", false);
+        }
+    }
+    changed();
+});
+(0, jquery_1.default)("#maketrade").on("click", () => {
+    let map = "";
+    for (let element of elems) {
+        if ((0, jquery_1.default)(element).prop("checked")) {
+            let info = JSON.parse(element.getAttribute("content"));
+            let amount = Number.parseInt((0, jquery_1.default)(`#amount-${info.id}`).val());
+            map += `${info.goods}:${amount}|`;
+        }
+    }
+    window.location.href = `/make-trade?goods=${map.substring(0, map.length - 1)}&clear-cart=true`;
+});
+function changed() {
+    let total = 0;
+    let totalPrice = 0;
+    let allSelected = true;
+    for (let element of elems) {
+        if ((0, jquery_1.default)(element).prop("checked")) {
+            let info = JSON.parse(element.getAttribute("content"));
+            let amount = Number.parseInt((0, jquery_1.default)(`#amount-${info.id}`).val());
+            total += amount;
+            totalPrice += amount * info.price;
+        }
+        else
+            allSelected = false;
+    }
+    (0, jquery_1.default)("#total").text(`已选 ${total} 件商品`);
+    (0, jquery_1.default)("#total-price").text(totalPrice / 100 + "￥");
+    allSelect.prop("checked", allSelected);
+}
+function delta(amount, left, right, isAdd) {
+    let num = Number.parseInt(amount.val());
+    let max = Number.parseInt(amount.attr("max"));
+    if (isAdd) {
+        amount.val(num + 1);
+        num++;
+        if (num >= max)
+            right.attr("disabled", "disabled");
+        if (num > 1)
+            left.removeAttr("disabled");
+    }
+    else {
+        amount.val(num - 1);
+        num--;
+        if (num <= 1)
+            left.attr("disabled", "disabled");
+        if (num < max)
+            right.removeAttr("disabled");
+    }
+    changed();
+}
+function inputted(amount, left, right) {
+    let num = Number.parseInt(amount.val());
+    let max = Number.parseInt(amount.attr("max"));
+    num = Math.min(Math.max(1, num), max);
+    amount.val(num);
+    if (num <= 1)
+        left.attr("disabled", "disabled");
+    if (num >= max)
+        right.attr("disabled", "disabled");
+    if (num > 1 && num < max) {
+        left.removeAttr("disabled");
+        right.removeAttr("disabled");
+    }
+    changed();
+}
 
 },{"../scripts/components":4,"jquery":2}],4:[function(require,module,exports){
 "use strict";
@@ -14018,10 +14168,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.relativeWords = exports.buildGoodsList = exports.showCropper = exports.showConfirm = exports.buildGoods = exports.buildScrollImg = exports.buildTopBar = exports.buildSearch = void 0;
+exports.relativeWords = exports.buildGoodsList = exports.showCropper = exports.showConfirm = exports.buildAddressItem = exports.buildAddressEditor = exports.buildGoods = exports.buildScrollImg = exports.buildTopBar = exports.buildSearch = void 0;
 const jquery_1 = __importDefault(require("jquery"));
 const cropperjs_1 = __importDefault(require("cropperjs"));
-function buildSearch(id) {
+function buildSearch(id, searchDefault = "") {
     (0, jquery_1.default)(document).on("click", function () {
         let search = (0, jquery_1.default)(`#${id}`);
         search.on("focus", function () {
@@ -14031,40 +14181,45 @@ function buildSearch(id) {
             (0, jquery_1.default)(`#${id}-menu`).hide();
         });
     });
+    (0, jquery_1.default)(() => {
+        (0, jquery_1.default)("#toggle-" + id).on("click", () => {
+            window.location.href = `/?search=${(0, jquery_1.default)("#" + id).val()}`;
+        });
+    });
     return (`
-  <div class="searchBar">
-      <img src="/img/zoom.png" alt="">
-      <input type="text" id="${id}" class="search-input" placeholder="输入关键字以搜索">
-      <button class="btn search">搜索</button>
-  </div>
-  <div class="searchMenu" id="${id}-menu">
-      <div>
-          <div id="${id}-history" class="flexList history"></div>
-          <div class="horLine"></div>
-          <div class="flex">
-              <div id="categoryList" class="listCont">
-              </div>
-              <div class="vertLine"></div>
-              <div id="subCategory" class="box">
-              </div>
-          </div>
-      </div>
-  </div> 
-`);
+    <div class="searchBar">
+        <img src="/img/zoom.png" alt="">
+        <input type="text" id="${id}" class="search-input" placeholder="输入关键字以搜索" value="${searchDefault}">
+        <button id="toggle-${id}" class="btn search">搜索</button>
+    </div>
+    <div class="searchMenu" id="${id}-menu">
+        <div>
+            <div id="${id}-history" class="flexList history"></div>
+            <div class="horLine"></div>
+            <div class="flex">
+                <div id="categoryList" class="listCont">
+                </div>
+                <div class="vertLine"></div>
+                <div id="subCategory" class="box">
+                </div>
+            </div>
+        </div>
+    </div> 
+  `);
 }
 exports.buildSearch = buildSearch;
-function buildTopBar(curr = "", search = false) {
+function buildTopBar(curr = "", search = false, searchDefault = "") {
     return (`
   <div class="topbar">
     <h2>Logo</h2>
     <nav>
-      <a href="/" id="index" class="btn ${curr === "index" ? "active" : ""}">首页</a>
-      <a href="/message" id="mess" class="btn ${curr === "mess" ? "active" : ""}">消息</a>
-      <a href="/cart" id="cart" class="btn ${curr === "cart" ? "active" : ""}">购物车</a>
-      <a href="/profile" id="prof" class="btn ${curr === "prof" ? "active" : ""}">个人主页</a>
+      <a href="/" class="btn ${curr === "index" ? "active" : ""}">首页</a>
+      <a href="/message" class="btn ${curr === "mess" ? "active" : ""}">消息</a>
+      <a href="/cart" class="btn ${curr === "cart" ? "active" : ""}">购物车</a>
+      <a href="/profile" class="btn ${curr === "prof" ? "active" : ""}">个人主页</a>
     </nav>
     
-    ${search ? `<div id="topsearch">${buildSearch("topbarHover")}</div>` : ''}
+    ${search ? `<div id="topsearch">${buildSearch("topbarHover", searchDefault)}</div>` : ''}
   </div>
 `);
 }
@@ -14099,16 +14254,51 @@ exports.buildScrollImg = buildScrollImg;
 function buildGoods(goods) {
     return (`
   <div class="goods-preview" onclick="window.location.href='/goods/${goods.id}'">
-      <img src="/goods-res/${goods.id}/preview.png" alt="preview">
-      <div>
-          <h5 class="overflow-hide">${goods.title}</h5>
-          <h4 class="price">${(goods.price / 100).toFixed(2)}￥</h4>
-      </div>
+    <img src="/goods-res/${goods.id}/preview.png" alt="preview">
+    <div>
+      <h5 class="overflow-hide">${goods.title}</h5>
+      <h4 class="price">${(goods.price / 100).toFixed(2)}￥</h4>
+    </div>
   </div>  
 `);
 }
 exports.buildGoods = buildGoods;
-function showConfirm(title, type = true, resCallback = undefined, cancelText = "取消", ensureText = "确定") {
+function buildAddressEditor(id) {
+    return `
+    <div>
+      <h5>填写收货人信息</h5>
+      <form id="${id}">
+        <label for="receiver" class="lab">收货人</label><input id="receiver" name="receiver" type="text" class="def-input" placeholder="收货人姓名">
+        <label for="phone" class="lab">电话</label><input id="phone" name="phone" type="tel" class="def-input" placeholder="收货人电话">
+        <label for="address" class="lab">收货地点</label><div class="margin-hor padding-box write-back">
+          <textarea id="address" name="address" class="editor"></textarea>
+        </div>
+      </form>
+    </div>
+  `;
+}
+exports.buildAddressEditor = buildAddressEditor;
+function buildAddressItem(address, buildDelete = true) {
+    return (`
+    <label for="add-${address.id}">
+      <div class="write-back padding-box margin-hor flex pos-relative">
+        <input id="add-${address.id}" type="radio" name="address" class="address-box" value="${address.id}" ${address.isDefault ? "checked='true'" : ""}>
+        <div class="margin-side">
+          <h5>收货人姓名：${address.receiverName}</h5>
+          <h5>电话号码：${address.phone}</h5>
+          <h5>收货地：</h5>
+          <h5>${address.address}</h5>
+        </div>
+        
+        ${buildDelete ? `<div class="top right pos-absolute padding-box">
+          <button id="delete-${address.id}" class="btn" content="small"><img src="/assets/img/trash.png" class="icon" alt="删除"></button>
+        </div>` : ""}
+      </div>
+    </label>
+  `);
+}
+exports.buildAddressItem = buildAddressItem;
+function showConfirm(title, type = false, resCallback = undefined, cancelText = "取消", ensureText = "确定") {
     (0, jquery_1.default)('body').append(`
     <div class="cover">
       <div class="confirmbox">

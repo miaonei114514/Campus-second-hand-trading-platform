@@ -1,4 +1,5 @@
-class Result<T = null> {
+
+export class Result<T = null> {
   status: string;
   code: number;
   obj: T;
@@ -12,7 +13,7 @@ class Result<T = null> {
   }
 }
 
-class ImgInfo {
+export class ImgInfo {
   preview: string;
   alt: string;
 
@@ -22,7 +23,7 @@ class ImgInfo {
   }
 }
 
-class GoodsInfo {
+export class GoodsInfo {
   id: number;
   owner: number;
   title: string;
@@ -44,7 +45,7 @@ class GoodsInfo {
   }
 }
 
-class GoodsListResult {
+export class GoodsListResult {
   list: GoodsInfo[];
   end: number;
   noMore: boolean;
@@ -56,11 +57,27 @@ class GoodsListResult {
   }
 }
 
-class OrdersInfo {
+export class AddressInfo {
+  id: number;
+  receiverName: string;
+  phone: string;
+  address: string;
+  isDefault: boolean;
+
+  constructor(id: number, name: string, phone: string, address: string, isDefault: boolean){
+    this.id = id;
+    this.receiverName = name;
+    this.phone = phone;
+    this.address = address;
+    this.isDefault = isDefault;
+  }
+}
+
+export class OrdersInfo {
 
 }
 
-class TopicInfo {
+export class TopicInfo {
   id: number;
   publisher: number;
   target: number;
@@ -76,18 +93,30 @@ class TopicInfo {
   }
 }
 
-class UserInfo {
+export class UserInfo {
   id: number;
-  uid: string;
   name: string;
   displayName: string | undefined;
   email: string;
   description: string | undefined;
 
-  constructor(id: number, uid: string, name: string, email: string){
+  constructor(id: number, name: string, email: string){
     this.id = id;
-    this.uid = uid;
     this.name = name;
     this.email = email;
+  }
+}
+
+export class CartInfo {
+  id: number;
+  goods: number;
+  owner: number;
+  amount: number;
+
+  constructor(id: number, goods: number, owner: number, amount: number) {
+    this.id = id;
+    this.goods = goods;
+    this.owner = owner;
+    this.amount = amount;
   }
 }

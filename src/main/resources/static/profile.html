@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <title>个人中心</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta id="parameters" content='{"user-uid": "${uid}" }'>
     <link rel="stylesheet" type="text/css" href="/style.css">
-    <link rel="stylesheet" type="text/css" href="/lib/cropperjs/dist/cropper.css">
+    <link rel="stylesheet" type="text/css" href="/node_modules/cropperjs/dist/cropper.css">
 </head>
 <body>
 
 <!--script make--><div id="topBar"></div>
 <div class="container padding-box">
     <!--script make--><div id="user-meta" class="margin-box back bar"></div>
+    <!--script make--><div id="address" class="margin-box back bar"></div>
     <!--script make--><div id="orders" class="margin-box back bar"></div>
     <!--script make--><div id="published" class="margin-box back bar"></div>
 </div>
@@ -19,6 +21,5 @@
 </body>
 
 <script src="/pagescripts/profile-page.js" defer></script>
-<script>initProfile("${uid}")</script>
 
 </html>

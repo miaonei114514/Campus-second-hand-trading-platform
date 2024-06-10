@@ -4,6 +4,7 @@
     <title>首页</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta id="parameters" content='{"searching": ${searching} , "search": ${search}, "tags": ${tags}}'>
     <link rel="stylesheet" type="text/css" href="/style.css">
 </head>
 <body>
@@ -13,12 +14,12 @@
     <!--script make--><div id="searchBar" class="back padding-box"></div>
 
     <div id="main" class="padding-box">
-        <div class="back">
+        <div id="recommend-box" class="back">
             <h5 class='padding-box'>今日推荐</h5>
 
             <!--script make--><div id="recommend" class="masked"></div>
         </div>
-        <h3 class="margin-box" style="margin-top: 36px">浏览商品</h3>
+        <h3 id="title" class="margin-box" style="margin-top: 36px">浏览商品</h3>
         <!--script make--><div id="shop-list" class="flex margin-box"></div>
         <!--script make--><div id="bottom"></div>
     </div>
@@ -29,11 +30,6 @@
 
 </body>
 
-<script src="/lib/jquery/dist/jquery.min.js"></script>
-<script src="/scripts/types.js"></script>
-<script src="/scripts/components.js"></script>
-<script src="/scripts/main.js"></script>
-
-<script src="/index.js"></script>
+<script src="/pagescripts/index-page.js" defer></script>
 
 </html>

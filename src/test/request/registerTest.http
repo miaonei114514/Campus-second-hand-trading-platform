@@ -1,0 +1,37 @@
+
+POST http://0.0.0.0:8080/register
+Content-Type: application/x-www-form-urlencoded
+
+name=1234567&email=1234567@q.c&password=12312345
+
+###
+
+POST http://0.0.0.0:8080/logout
+Content-Type: application/json
+
+{}
+
+####
+
+POST http://0.0.0.0:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+name=1234567&password=12312345
+
+####
+
+POST http://0.0.0.0:8080/update_user_info
+Content-Type: application/x-www-form-urlencoded
+
+displayName=EBwilson
+
+###
+
+POST http://0.0.0.0:8080/update_user_info/EBwilson
+Content-Type: application/x-www-form-urlencoded
+
+displayName=EBwilsons
+
+###
+
+GET http://0.0.0.0:8080/usercontext/b166-305a-fb-02f2-f8fee7
